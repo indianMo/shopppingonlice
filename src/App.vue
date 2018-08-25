@@ -155,4 +155,7 @@ $(document).ready(function() {
 #menu2 {
   background-image: none;
 }
+body {
+  background-color: transparent;
+}
 </style>
