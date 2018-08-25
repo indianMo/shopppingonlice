@@ -13,7 +13,9 @@
                 <div class="wrap-box">
                     <div class="left-925">
                         <div class="goods-box clearfix">
-                            <div class="pic-box"></div>
+                            <div class="pic-box">
+                                <ProductZoomer :base-images="images" :base-zoomer-options="zoomerOptions" />
+                            </div>
                             <div class="goods-spec">
                                 <h1>{{goodsinfo.title}}123123</h1>
                                 <p class="subtitle">{{goodsinfo.sub_title}}</p>
@@ -41,15 +43,10 @@
                                         <dd>
                                             <div class="stock-box">
                                                 <div class="el-input-number el-input-number--small">
-                                                    <span role="button" class="el-input-number__decrease is-disabled">
-                                                        <i class="el-icon-minus"></i>
-                                                    </span>
-                                                    <span role="button" class="el-input-number__increase">
-                                                        <i class="el-icon-plus"></i>
-                                                    </span>
+
                                                     <div class="el-input el-input--small">
                                                         <!---->
-                                                        <input autocomplete="off" size="small" type="text" rows="2" max="60" min="1" validateevent="true" class="el-input__inner" role="spinbutton" aria-valuemax="60" aria-valuemin="1" aria-valuenow="1" aria-disabled="false">
+                                                        <el-input-number v-model="buyCount" @change="handleChange" :min="1" :max="goodsinfo.stock_quantity" label="描述文字"></el-input-number>
                                                         <!---->
                                                         <!---->
                                                         <!---->
@@ -77,17 +74,17 @@
                             <div id="tabHead" class="tab-head" style="position: static; top: 517px; width: 925px;">
                                 <ul>
                                     <li>
-                                        <a href="javascript:;" class="selected">商品介绍</a>
+                                        <a href="javascript:;" @click="showDiscuss=false" :class="{selected: !showDiscuss}">商品介绍</a>
                                     </li>
                                     <li>
-                                        <a href="javascript:;">商品评论</a>
+                                        <a href="javascript:;" @click="showDiscuss=true" :class="{selected: showDiscuss}">商品评论</a>
                                     </li>
                                 </ul>
                             </div>
-                            <div class="tab-content entry" style="display: block;">
-                                内容
+                            <div class="tab-content entry" style="display: block;" v-html="goodsinfo.content" v-show="showDiscuss==false">
+
                             </div>
-                            <div class="tab-content" style="display: block;">
+                            <div class="tab-content" style="display: block;" v-show="showDiscuss==true">
                                 <div class="comment-box">
                                     <div id="commentForm" name="commentForm" class="form-box">
                                         <div class="avatar-box">
@@ -95,41 +92,30 @@
                                         </div>
                                         <div class="conn-box">
                                             <div class="editor">
-                                                <textarea id="txtContent" name="txtContent" sucmsg=" " datatype="*10-1000" nullmsg="请填写评论内容！"></textarea>
+                                                <textarea v-model="commenttxt" id="txtContent" name="txtContent" sucmsg=" " datatype="*10-1000" nullmsg="请填写评论内容！"></textarea>
                                                 <span class="Validform_checktip"></span>
                                             </div>
                                             <div class="subcon">
-                                                <input id="btnSubmit" name="submit" type="submit" value="提交评论" class="submit">
+                                                <input id="btnSubmit" @click="postComment" name="submit" type="submit" value="提交评论" class="submit">
                                                 <span class="Validform_checktip"></span>
                                             </div>
                                         </div>
                                     </div>
                                     <ul id="commentList" class="list-box">
-                                        <p style="margin: 5px 0px 15px 69px; line-height: 42px; text-align: center; border: 1px solid rgb(247, 247, 247);">暂无评论，快来抢沙发吧！</p>
-                                        <li>
+                                        <p v-show="message.length <= 0" style="margin: 5px 0px 15px 69px; line-height: 42px; text-align: center; border: 1px solid rgb(247, 247, 247);">暂无评论，快来抢沙发吧！</p>
+                                        <li v-for="item in message" :key="item.id">
                                             <div class="avatar-box">
                                                 <i class="iconfont icon-user-full"></i>
                                             </div>
                                             <div class="inner-box">
                                                 <div class="info">
-                                                    <span>匿名用户</span>
-                                                    <span>2017/10/23 14:58:59</span>
+                                                    <span>{{item.user_name}}</span>
+                                                    <span>{{item.replay_time}}</span>
                                                 </div>
-                                                <p>testtesttest</p>
+                                                <p>{{item.content}}</p>
                                             </div>
                                         </li>
-                                        <li>
-                                            <div class="avatar-box">
-                                                <i class="iconfont icon-user-full"></i>
-                                            </div>
-                                            <div class="inner-box">
-                                                <div class="info">
-                                                    <span>匿名用户</span>
-                                                    <span>2017/10/23 14:59:36</span>
-                                                </div>
-                                                <p>很清晰调动单很清晰调动单</p>
-                                            </div>
-                                        </li>
+
                                     </ul>
                                     <div class="page-box" style="margin: 5px 0px 0px 62px;">
                                         <div id="pagination" class="digg">
@@ -165,7 +151,10 @@
                 </div>
             </div>
         </div>
+        <!-- 回到顶部 -->
+        <BackTop></BackTop>
     </div>
+
 </template>
 <script>
 import axios from "axios";
@@ -173,33 +162,131 @@ export default {
   name: "detail",
   data: function() {
     return {
-      productId: undefined,
+      productId: 89,
       goodsinfo: {},
       hotgoodslist: [],
-      imglist: []
+      imglist: [],
+      buyCount: 0,
+      //商品介绍和商品评论的类名控制
+      showDiscuss: true,
+      //评论页码
+      pageIndex: 1,
+      //评论页码容量
+      pageSize: 5,
+      //评论内容
+      message: [],
+      //评论内容
+      commenttxt: "",
+      //放大镜相关数据
+      "images": {
+        "thumbs":[],  
+        "normal_size":[],  
+        "large_size":[],  
+      },
+      //放大镜相关数据
+       'zoomerOptions': {
+        'zoomFactor': 4,
+        'pane': 'container',
+        'hoverDelay': 300,
+        'namespace': 'container-zoomer',
+        'move_by_click':true,
+        'scroll_items': 4,
+        'choosed_thumb_border_color': "#ff3d00"
+      }
     };
   },
-  // beforeCreate() {
-  //     // console.log(this.$route.params);
-  //     // console.log(this.$route.params.id);
-  //     // console.log(this.goodsinfo);
+  methods: {
+    handleChange() {},
+    postComment() {
+      axios
+        .post(
+          `http://47.106.148.205:8899/site/validate/comment/post/goods/${
+            this.productId
+          }`,
+          {
+            commenttxt: this.commenttxt
+          }
+        )
+        .then(response => {
+          //   console.log(response);
+          if (response.data.stat == 0) {
+            //评论成功
+            this.getCommentInfo();
+          }
+        });
+    },
+    getProductInfo() {
+      //获得主体商品列表数据
+      axios
+        .get(
+          `http://47.106.148.205:8899/site/goods/getgoodsinfo/${this.productId}`
+        )
+        .then(response => {
+          //   console.log(response);
 
-  // },
+          this.goodsinfo = response.data.message.goodsinfo;
+          this.hotgoodslist = response.data.message.hotgoodslist;
+          this.imglist = response.data.message.imglist;
+
+          //处理放大镜数据
+          let temArr = [];
+          //循环处理数据
+          this.imglist.forEach((v,i)=>{
+              temArr.push({
+                  id: v.id,
+                  url:v.original_path
+              })
+          }) 
+          //临时数组
+          this.images.thumbs = temArr; 
+
+          //循环处理数据
+          this.imglist.forEach((v,i)=>{
+              temArr.push({
+                  id: v.id,
+                  url:v.original_path
+              })
+          }) 
+          //临时数组
+          this.images.normal_size = temArr; 
+
+          //循环处理数据
+          this.imglist.forEach((v,i)=>{
+              temArr.push({
+                  id: v.id,
+                  url:v.original_path
+              })
+          }) 
+          //临时数组
+          this.images.large_size = temArr; 
+        });
+    },
+    getCommentInfo() {
+      //获得评论数据
+      axios
+        .get(
+          `http://47.106.148.205:8899/site/comment/getbypage/goods/${
+            this.productId
+          }?pageIndex=${this.pageIndex}&pageSize=${this.pageSize}`
+        )
+        .then(response => {
+          //    console.log(response);
+          this.pageIndex = response.data.pageIndex;
+          this.pageSize = response.data.pageSize;
+          this.message = response.data.message;
+        });
+    }
+  },
   created() {
-    // console.log(this.$route.params);
-    // console.log(this.$route.params.id);
     this.productId = this.$route.params.id;
-    axios
-      .get(
-        `http://47.106.148.205:8899/site/goods/getgoodsinfo/${this.productId}`
-      )
-      .then(response => {
-        this.goodsinfo = response.data.message.goodsinfo;
-        this.hotgoodslist = response.data.message.hotgoodslist;
-        this.imglist = response.data.message.imglist;
-      });
+    this.getProductInfo();
+    this.getCommentInfo();
   }
 };
 </script>
 <style>
+.tab-content img {
+  display: block;
+  max-width: 100%;
+}
 </style>
