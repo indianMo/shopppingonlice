@@ -14,7 +14,7 @@
                     <div class="left-925">
                         <div class="goods-box clearfix">
                             <div class="pic-box">
-                                <ProductZoomer :base-images="images" :base-zoomer-options="zoomerOptions" />
+                                <ProductZoomer v-if="images.normal_size.length" :base-images="images" :base-zoomer-options="zoomerOptions" />
                             </div>
                             <div class="goods-spec">
                                 <h1>{{goodsinfo.title}}123123</h1>
@@ -92,7 +92,7 @@
                                         </div>
                                         <div class="conn-box">
                                             <div class="editor">
-                                                <textarea v-model="commenttxt" id="txtContent" name="txtContent" sucmsg=" " datatype="*10-1000" nullmsg="请填写评论内容！"></textarea>
+                                                <textarea v-model.trim="commenttxt" id="txtContent" name="txtContent" sucmsg=" " datatype="*10-1000" nullmsg="请填写评论内容！"></textarea>
                                                 <span class="Validform_checktip"></span>
                                             </div>
                                             <div class="subcon">
@@ -118,11 +118,12 @@
 
                                     </ul>
                                     <div class="page-box" style="margin: 5px 0px 0px 62px;">
-                                        <div id="pagination" class="digg">
+                                        <!-- <div id="pagination" class="digg">
                                             <span class="disabled">« 上一页</span>
                                             <span class="current">1</span>
                                             <span class="disabled">下一页 »</span>
-                                        </div>
+                                        </div> -->
+                                        <Page :total="totalCount" placement="top" show-elevator @on-change="pageChange" @on-page-size-change="pageSizeChange" />
                                     </div>
                                 </div>
                             </div>
@@ -134,15 +135,17 @@
                                 <h4>推荐商品</h4>
                                 <ul class="side-img-list">
                                     <li v-for="item in hotgoodslist" :key="item.id">
-                                        <div class="img-box">
-                                            <a href="#/site/goodsinfo/90" class="">
-                                                <img :src="item.img_url">
-                                            </a>
-                                        </div>
-                                        <div class="txt-box">
-                                            <a href="#/site/goodsinfo/90" class="">{{item.title}}</a>
-                                            <span>{{item.add_time | filterDate }}</span>
-                                        </div>
+                                        <router-link :to="'/detail/' + item.id">
+                                            <div class="img-box">
+                                                <a href="#/site/goodsinfo/90" class="">
+                                                    <img :src="item.img_url">
+                                                </a>
+                                            </div>
+                                            <div class="txt-box">
+                                                <a href="#/site/goodsinfo/90" class="">{{item.title}}</a>
+                                                <span>{{item.add_time | filterDate }}</span>
+                                            </div>
+                                        </router-link>
                                     </li>
                                 </ul>
                             </div>
@@ -172,32 +175,38 @@ export default {
       //评论页码
       pageIndex: 1,
       //评论页码容量
-      pageSize: 5,
+      pageSize: 10,
+      //评论总条数
+      totalCount: 0,
       //评论内容
       message: [],
       //评论内容
       commenttxt: "",
       //放大镜相关数据
-      "images": {
-        "thumbs":[],  
-        "normal_size":[],  
-        "large_size":[],  
+      images: {
+        thumbs: [],
+        normal_size: [],
+        large_size: []
       },
       //放大镜相关数据
-       'zoomerOptions': {
-        'zoomFactor': 4,
-        'pane': 'container',
-        'hoverDelay': 300,
-        'namespace': 'container-zoomer',
-        'move_by_click':true,
-        'scroll_items': 4,
-        'choosed_thumb_border_color': "#ff3d00"
+      zoomerOptions: {
+        zoomFactor: 4,
+        pane: "container",
+        hoverDelay: 300,
+        namespace: "container-zoomer",
+        move_by_click: true,
+        scroll_items: 4,
+        choosed_thumb_border_color: "#ff3d00"
       }
     };
   },
   methods: {
     handleChange() {},
     postComment() {
+      if (this.commenttxt == "") {
+        this.$Message.warning("评论内容不能为空");
+        return;
+      }
       axios
         .post(
           `http://47.106.148.205:8899/site/validate/comment/post/goods/${
@@ -208,11 +217,14 @@ export default {
           }
         )
         .then(response => {
-          //   console.log(response);
-          if (response.data.stat == 0) {
+          // console.log(response);
+          if (response.data.status == 0) {
             //评论成功
+            this.$Message.success("评论成功!");
             this.getCommentInfo();
           }
+
+          this.commenttxt = "";
         });
     },
     getProductInfo() {
@@ -231,34 +243,34 @@ export default {
           //处理放大镜数据
           let temArr = [];
           //循环处理数据
-          this.imglist.forEach((v,i)=>{
-              temArr.push({
-                  id: v.id,
-                  url:v.original_path
-              })
-          }) 
+          this.imglist.forEach((v, i) => {
+            temArr.push({
+              id: v.id,
+              url: v.original_path
+            });
+          });
           //临时数组
-          this.images.thumbs = temArr; 
+          this.images.thumbs = temArr;
 
           //循环处理数据
-          this.imglist.forEach((v,i)=>{
-              temArr.push({
-                  id: v.id,
-                  url:v.original_path
-              })
-          }) 
+          this.imglist.forEach((v, i) => {
+            temArr.push({
+              id: v.id,
+              url: v.original_path
+            });
+          });
           //临时数组
-          this.images.normal_size = temArr; 
+          this.images.normal_size = temArr;
 
           //循环处理数据
-          this.imglist.forEach((v,i)=>{
-              temArr.push({
-                  id: v.id,
-                  url:v.original_path
-              })
-          }) 
+          this.imglist.forEach((v, i) => {
+            temArr.push({
+              id: v.id,
+              url: v.original_path
+            });
+          });
           //临时数组
-          this.images.large_size = temArr; 
+          this.images.large_size = temArr;
         });
     },
     getCommentInfo() {
@@ -270,17 +282,39 @@ export default {
           }?pageIndex=${this.pageIndex}&pageSize=${this.pageSize}`
         )
         .then(response => {
-          //    console.log(response);
           this.pageIndex = response.data.pageIndex;
           this.pageSize = response.data.pageSize;
           this.message = response.data.message;
+          this.totalCount = response.data.totalcount;
         });
+    },
+    pageChange(page) {
+      this.pageIndex = page;
+      this.getCommentInfo();
+    },
+    pageSizeChange(size) {
+      this.pageSize = size;
+
+      if (this.pageIndex == 1) {
+          this.getCommentInfo();
+      }
     }
   },
   created() {
     this.productId = this.$route.params.id;
     this.getProductInfo();
     this.getCommentInfo();
+  },
+  watch: {
+    $route(val, oldValue) {
+      console.log(val);
+      console.log(oldValue);
+      this.productId = val.params.id;
+
+      this.images.normal_size = [];
+      this.getProductInfo();
+      this.getCommentInfo();
+    }
   }
 };
 </script>
@@ -288,5 +322,8 @@ export default {
 .tab-content img {
   display: block;
   max-width: 100%;
+}
+.pic-box {
+  width: 415px;
 }
 </style>

@@ -7,11 +7,17 @@ import 'element-ui/lib/theme-chalk/index.css';
 import VueLazyload from 'vue-lazyload'
 import productDetail from "./components/productDetail.vue"
 import moment from "moment";
+import iView from 'iview';
+import 'iview/dist/styles/iview.css';
+import ProductZoomer from 'vue-product-zoomer'
 
 Vue.config.productionTip = false
 
 Vue.use(VueRouter);
 Vue.use(ElementUI);
+Vue.use(iView);
+Vue.use(ProductZoomer)
+
 import VueLazyLoad from 'vue-lazyload'
 Vue.use(VueLazyLoad, {
   loading: require('./assets/static/site/img/lazyloadImg.png')
@@ -47,5 +53,6 @@ let router = new VueRouter({
 
 new Vue({
   render: h => h(App),
-  router
+  router,
+  component: "zoomer"
 }).$mount('#app')
