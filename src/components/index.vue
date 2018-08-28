@@ -110,7 +110,7 @@
 </template>
 
 <script>
-import axios from "axios";
+;
 import slider from './slider.vue'
 
 export default {
@@ -126,8 +126,8 @@ export default {
   methods: {},
   beforeCreate() {},
   created() {
-    axios
-      .get("http://47.106.148.205:8899/site/goods/gettopdata/goods")
+    this.$axios
+      .get("/site/goods/gettopdata/goods")
       .then(response => {
 
         this.catelist = response.data.message.catelist;
@@ -136,8 +136,8 @@ export default {
       });
       //获得首页内容下部分数据
 
-    axios
-      .get("http://47.106.148.205:8899/site/goods/getgoodsgroup")
+    this.$axios
+      .get("/site/goods/getgoodsgroup")
       .then(response => {
         // handle success
         console.log(response);

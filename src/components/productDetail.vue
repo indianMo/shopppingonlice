@@ -62,8 +62,8 @@
                                     <dl>
                                         <dd>
                                             <div id="buyButton" class="btn-buy">
-                                                <button onclick="cartAdd(this,'/',1,'/shopping.html');" class="buy">立即购买</button>
-                                                <button onclick="cartAdd(this,'/',0,'/cart.html');" class="add">加入购物车</button>
+                                                <button v-on:click="cartAdd" class="buy">立即购买</button>
+                                                <button v-on:click="cartAdd" class="add">加入购物车</button>
                                             </div>
                                         </dd>
                                     </dl>
@@ -123,7 +123,7 @@
                                             <span class="current">1</span>
                                             <span class="disabled">下一页 »</span>
                                         </div> -->
-                                        <Page :total="totalCount" placement="top" show-elevator @on-change="pageChange" @on-page-size-change="pageSizeChange" />
+                                        <Page :total="totalCount" show-sizer placement="top"y show-elevator @on-change="pageChange" @on-page-size-change="pageSizeChange" />
                                     </div>
                                 </div>
                             </div>
@@ -160,7 +160,7 @@
 
 </template>
 <script>
-import axios from "axios";
+;
 export default {
   name: "detail",
   data: function() {
@@ -207,9 +207,9 @@ export default {
         this.$Message.warning("评论内容不能为空");
         return;
       }
-      axios
+      this.$axios
         .post(
-          `http://47.106.148.205:8899/site/validate/comment/post/goods/${
+          `/site/validate/comment/post/goods/${
             this.productId
           }`,
           {
@@ -229,9 +229,9 @@ export default {
     },
     getProductInfo() {
       //获得主体商品列表数据
-      axios
+      this.$axios
         .get(
-          `http://47.106.148.205:8899/site/goods/getgoodsinfo/${this.productId}`
+          `/site/goods/getgoodsinfo/${this.productId}`
         )
         .then(response => {
           //   console.log(response);
@@ -275,9 +275,9 @@ export default {
     },
     getCommentInfo() {
       //获得评论数据
-      axios
+      this.$axios
         .get(
-          `http://47.106.148.205:8899/site/comment/getbypage/goods/${
+          `/site/comment/getbypage/goods/${
             this.productId
           }?pageIndex=${this.pageIndex}&pageSize=${this.pageSize}`
         )
@@ -298,6 +298,14 @@ export default {
       if (this.pageIndex == 1) {
           this.getCommentInfo();
       }
+    },
+    cartAdd(){
+        // this.$store.commit("increment",1000)
+        console.log(111);
+       this.$store.commit("addGoods", {
+        goodId: this.productId,
+        goodNum: this.buyCount
+      });
     }
   },
   created() {
@@ -325,5 +333,10 @@ export default {
 }
 .pic-box {
   width: 415px;
+}
+.drift-zoom-pane {
+    border-radius: 50%;
+    width: 150px;
+    height: 150px;
 }
 </style>
